@@ -12,15 +12,13 @@ prior_mu = pd.mu;
 prior_sigma = pd.sigma;
 
 % Step 1, t = 0.
-N = 200;
+N = 10;
 particles = normrnd(prior_mu, prior_sigma, N, 1); % 200x1
 estimated_x = mean(particles); % scalar
 
 diffs = particles - estimated_x;
 P0 = diffs*diffs'; % 200x200
 estimated_x_a = [estimated_x', 0, 0]';
-%particles_a = [particles
-
 
 
 
