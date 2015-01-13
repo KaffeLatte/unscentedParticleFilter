@@ -1,0 +1,6 @@
+Nice links
+
+# StackExchange answer on what the differences between 
+Kalman filters and Particle filters are, that helped me
+in my understanding.
+http://stats.stackexchange.com/questions/2149/what-is-the-difference-between-a-particle-filter-sequential-monte-carlo-and-a
