@@ -4,3 +4,8 @@ Nice links
 Kalman filters and Particle filters are, that helped me
 in my understanding.
 http://stats.stackexchange.com/questions/2149/what-is-the-difference-between-a-particle-filter-sequential-monte-carlo-and-a
+
+# Wikipedia article about Recursive Bayesian estimation, 
+that helped me a lot in my understanding about how Kalman 
+filters work.
+http://en.wikipedia.org/wiki/Recursive_Bayesian_estimation
