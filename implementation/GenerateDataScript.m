@@ -3,8 +3,9 @@ clear all
 clc
 close all
 t_max = 60;
+x0 = 1; % TODO : change to random value.
 
-[xt,yt] = generateData(t_max); % TODO:s in generateData.
+[xt,yt] = generateData(t_max, x0);
 
 
 %% Visualize generated data
