@@ -39,6 +39,10 @@ estimated_x_a = [estimated_x, mean(v0), mean(n0)] % 1x3
 
 
 %% Create a P0 that is 200x200
+clc
+% Step 1, t = 0.
+N = 200;
+%N = 10;
 particles = normrnd(prior_mu, prior_sigma, N, 1); % 200x1
 v0 = zeros(N,1);
 n0 = zeros(N,1);
