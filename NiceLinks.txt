@@ -9,3 +9,6 @@ http://stats.stackexchange.com/questions/2149/what-is-the-difference-between-a-p
 that helped me a lot in my understanding about how Kalman 
 filters work.
 http://en.wikipedia.org/wiki/Recursive_Bayesian_estimation
+
+# This might be of use to understand the transformation (sigma point stuff)
+http://stats.stackexchange.com/questions/1709/how-to-draw-a-probable-outcome-from-a-distribution/1717#1717
