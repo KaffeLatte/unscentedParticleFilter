@@ -13,16 +13,41 @@ x0 = 1; % TODO : change to random value.
 pd = fitdist(xt,'Normal');
 prior_mu = pd.mu;
 prior_sigma = pd.sigma;
-
+%% UPF Algorithm
+clc
 % Step 1, t = 0.
 N = 200;
 %N = 10;
-particles = normrnd(prior_mu, prior_sigma, N, 1); % 200x1
-estimated_x = mean(particles) % scalar
 
-diffs = particles - estimated_x;
+% Create a P0 that is a scalar. Therefore the transposes are not that
+% important.
+particles = normrnd(prior_mu, prior_sigma, N, 1); % 200x1
+v0 = zeros(N,1);
+n0 = zeros(N,1);
+estimated_x = mean(particles) % scalar
+P0 = var(particles) % scalar
+
+x_a = [particles, v0, n0]; % 200x3
+estimated_x_a = [estimated_x, mean(v0), mean(n0)] % 1x3
+
+%estimated_x_a_duplicates = repmat(estimated_x_a,N,1); % 200x3
+%diffs = x_a - estimated_x_a_duplicates; % 200x3
+%P0_a = diffs'*diffs
+
+
+
+
+
+%% Create a P0 that is 200x200
+particles = normrnd(prior_mu, prior_sigma, N, 1); % 200x1
+v0 = zeros(N,1);
+n0 = zeros(N,1);
+estimated_x = mean(particles); % scalar
+
+diffs = particles - estimated_x; % 200x1
 P0 = diffs*diffs'; % 200x200
-estimated_x_a = [estimated_x', 0, 0]';
+x_a = [particles, v0, n0];
+%estimated_x_a = [estimated_x', 0, 0]';
 
 
 
