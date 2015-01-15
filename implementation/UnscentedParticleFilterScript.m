@@ -133,9 +133,9 @@ for t = 1:T
     % TODO: Figure out if the procedure for calculating P_a has to be
     % different in getCorrespondingAugumentedVariables for t>0 than how it is in the initialization step. 
     
-    [x_a, current_estimated_x_a, current_estimated_P_a] = getCorrespondingAugmentedVariables(particles((t+1),:), v0, n0 ); 
-    previous_estimated_x_a = current_estimated_x_a;
-    previous_P_a = current_estimated_P_a;
+    %[x_a, current_estimated_x_a, current_estimated_P_a] = getCorrespondingAugmentedVariables(particles((t+1),:), v0, n0 ); 
+    %previous_estimated_x_a = current_estimated_x_a;
+    %previous_P_a = current_estimated_P_a;
     
     
     % Loop over all particle filter particles.
