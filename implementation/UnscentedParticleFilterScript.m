@@ -26,54 +26,48 @@ prior_sigma = pd.sigma;
 
 %% UPF Algorithm
 % Repeat the experiment 100 times.
+
+% SETTINGS
 clc
 % Set the number of time steps
-T = 60;
-
+T = 4; %T = 60;
 % Set the number of particles
-%N = 200;
-N = 10;
+N = 10; %N = 200;
+% Allocate memory for saving parameter values
+particles = zeros(T+1,N);
+Ps = zeros(T+1,N);
 
-% Step 1. INITIALIZATION, t = 0.
+% INITIALIZATION, t = 0.
 % Draw particles from the prior
-particles = normrnd(prior_mu, prior_sigma, 1, N); % 1xN
+particles(1,:) = normrnd(prior_mu, prior_sigma, 1, N); % 1xN
 % Initiate noise variables
 v0 = zeros(1,N);
 n0 = zeros(1,N);
 % Compute mean
-estimated_x = mean(particles); % 1x1
+estimated_x = mean(particles(1,:)); % 1x1
 % Copute Covariance matrix.
-diffs = particles - estimated_x; % 1xN
+diffs = particles(1,:) - estimated_x; % 1xN
 P0 = diffs*diffs'; % 1x1
+Ps(1,:) = P0; 
 % Redefine the state rand var as a concatenation of the original state and
 % noise variables.
-x_a = [particles', v0', n0']'; % 3xN
+[x_a, estimated_x_a, P0_a] = getCorrespondingAugmentedVariables(particles(1,:), v0, n0 ); % dim(x_a) = 3xN    dim(estimated_x_a) = 3x1    dim(P0_a) = 3x3
 
-% Compute the "new" mean
-estimated_x_a = [estimated_x, mean(v0), mean(n0)]'; % 3x1
-% Compute the "new" Covariance matrix.
-estimated_x_a_duplicates = repmat(estimated_x_a,1,N); % 3xN
-diffs = x_a - estimated_x_a_duplicates; % 3xN
-P0_a = diffs*diffs'; % 3x3
-
+% THE BIG MACHINERY
 % Define 
 previous_estimated_x_a = estimated_x_a;
 previous_P_a = P0_a;
-previous_estimated_x = estimated_x;
-previous_P = P0;
-previous_particles = particles;
 
-% Step 2. t = 1,...,60
 alpha = 1;
 beta = 0; % Comment from the paper: beta = 2 for suitable for Gaussian prior. Change to this?
 kappa = 2; % Comment from the paper: kappa = 0 is a good default choise. Change to this?
-% TODO: Adapt the content in the nestled loop to take the previous values
-% in each of the t:th steps. Not only using the original values.
 
-for t = 1 %t=1:T
+% TODO: Adapt the content in the nestled loop to take the previous values
+%       in each of the t:th steps. Not only using the original values. DONE?
+
+for t = 1:T
     % a) Importance sampling step, using SUT.
-    % ---------------------------------------
-    % Loop over all particle filter particles.
+    for i = 1:N
         % - Update the particles with the UKF:
         % * Calculate sigma points and their weights
         n_x = size(x_a,1);          % THESE PARAMETER definitions, should maybe be moved outside big loop?
@@ -108,7 +102,7 @@ for t = 1 %t=1:T
         previous_sigma_v = previous_sigma_points(2,:);
         previous_sigma_n = previous_sigma_points(3,:);
         previous_t = t-1;
-                                       % !!!!! WHEN / HOW DO WE PUT IN THE NOISE DISTRIBUTIONS INSTEAD OF ZEROS !!!! ??????
+
         current_sigma_points(1,:) = processModel(previous_sigma_x, previous_sigma_v, previous_t); % 1x7
         current_estimated_x = sum(previous_sigma_weights(1,:) .* current_sigma_points(1,:)); % 1x1
         current_P = sum(previous_sigma_weights(2,:) .* ((current_sigma_points(1,:)-current_estimated_x)*(current_sigma_points(1,:)-current_estimated_x)') ); %1x1
@@ -123,9 +117,26 @@ for t = 1 %t=1:T
         current_P = current_P - current_Kalman_gain*current_P_yy*current_Kalman_gain';% 1x1                  % CHANGE NAME on this variable?! 
         
         % - Sample
-        %normrnd(current_estimated_x, current_P)
-        % - Set        
-    % End Loop over all particle filter partcles.
+        new_particle = normrnd(current_estimated_x, current_P); % the (t+1) index is due to matlabs indexing, everywhere you see it.
+        % - Set  
+        particles(t+1,i) = new_particle;
+        Ps(t+1,i) = current_P;
+    end  
+    % TODO: Figure out if this update is to be done or not.
+    
+    % Update x_a, P_a and estimated_x_a 
+    
+    % TODO: Figure out it some how incorporate the noise distributions here
+    % somewhere? Or if it they always are zero. And the distributions are
+    % used only for generating data. I mean, v0 and n0 here below, really?? 
+    
+    % TODO: Figure out if the procedure for calculating P_a has to be
+    % different in getCorrespondingAugumentedVariables for t>0 than how it is in the initialization step. 
+    
+    [x_a, current_estimated_x_a, current_estimated_P_a] = getCorrespondingAugmentedVariables(particles((t+1),:), v0, n0 ); 
+    previous_estimated_x_a = current_estimated_x_a;
+    previous_P_a = current_estimated_P_a;
+    
     
     % Loop over all particle filter particles.
         % Evaluate the importance weights up to a normalizing constant.
