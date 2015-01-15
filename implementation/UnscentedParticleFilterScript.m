@@ -3,7 +3,7 @@ clear all
 clc
 close all
 t_max = 60;
-x0 = 1; % TODO : change to random value.
+x0 = abs(randn(1,1))*100; % = 1
 [xt,yt] = generateData(t_max, x0); % dim(xt) = 61x1, dim(yt) = 60x1
 
 
@@ -36,6 +36,9 @@ N = 10; %N = 200;
 % Allocate memory for saving parameter values
 particles = zeros(T+1,N);
 Ps = zeros(T+1,N);
+estimated_ys = zeros(T,N);
+estimated_x_means = zeros(T+1,N);
+importance_weights = zeros(T,N);
 
 % INITIALIZATION, t = 0.
 % Draw particles from the prior
@@ -45,6 +48,7 @@ v0 = zeros(1,N);
 n0 = zeros(1,N);
 % Compute mean
 estimated_x = mean(particles(1,:)); % 1x1
+estimated_x_means(1,:) = estimated_x;
 % Copute Covariance matrix.
 diffs = particles(1,:) - estimated_x; % 1xN
 P0 = diffs*diffs'; % 1x1
@@ -106,7 +110,7 @@ for t = 1:T
         current_sigma_points(1,:) = processModel(previous_sigma_x, previous_sigma_v, previous_t); % 1x7
         current_estimated_x = sum(previous_sigma_weights(1,:) .* current_sigma_points(1,:)); % 1x1
         current_P = sum(previous_sigma_weights(2,:) .* ((current_sigma_points(1,:)-current_estimated_x)*(current_sigma_points(1,:)-current_estimated_x)') ); %1x1
-        current_sigma_point_propagations = observationModel(current_sigma_points(1,:),previous_sigma_n, t); % 1x7
+        current_sigma_point_propagations = observationModel(current_sigma_points(1,:),previous_sigma_n, t);% 1x7
         current_estimated_y = sum(previous_sigma_weights(1,:) .* current_sigma_point_propagations); % 1x1
         
         % * Incorporate new observation (measurement update)
@@ -116,37 +120,43 @@ for t = 1:T
         current_estimated_x = current_estimated_x + current_Kalman_gain*(yt(t)-current_estimated_y);% 1x1    % CHANGE NAME on this variable?! 
         current_P = current_P - current_Kalman_gain*current_P_yy*current_Kalman_gain';% 1x1                  % CHANGE NAME on this variable?! 
         
-        % - Sample
+        % - Sample x^
         new_particle = normrnd(current_estimated_x, current_P); % the (t+1) index is due to matlabs indexing, everywhere you see it.
         % - Set  
         particles(t+1,i) = new_particle;
+        estimated_x_means(t+1,i) = current_estimated_x;
         Ps(t+1,i) = current_P;
     end  
-    % TODO: Figure out if this update is to be done or not.
-    
-    % Update x_a, P_a and estimated_x_a 
-    
+
     % TODO: Figure out it some how incorporate the noise distributions here
     % somewhere? Or if it they always are zero. And the distributions are
     % used only for generating data. I mean, v0 and n0 here below, really?? 
     
-    % TODO: Figure out if the procedure for calculating P_a has to be
-    % different in getCorrespondingAugumentedVariables for t>0 than how it is in the initialization step. 
-    
-    %[x_a, current_estimated_x_a, current_estimated_P_a] = getCorrespondingAugmentedVariables(particles((t+1),:), v0, n0 ); 
-    %previous_estimated_x_a = current_estimated_x_a;
-    %previous_P_a = current_estimated_P_a;
-    
-    
-    % Loop over all particle filter particles.
-        % Evaluate the importance weights up to a normalizing constant.
-    % End Loop over all particle filter partcles.
-    % Loop over all particle filter particles.
-        % Normalize the importance weights.
-    % End Loop over all particle filter partcles.
-    
-    % b) Selection step.
+    % Evaluate the importance weights up to a normalizing constant.
+    estimated_ys(t,:) = observationModel(particles(t,:), n0, t); %%% RIGHT??
+    for i=1:N
+        % the observation model is a Gaussian distribution
+        
+        obs_var = 1e-5;
+        likelihood = (1/sqrt(2*pi*obs_var)) * exp(-0.5*(1/obs_var)*(yt(t)-estimated_ys(t,i))^2);
+        % TODO: estimated_ys(t,i) is something else?
+        % the process model is a Gamma distribution
+        k = 3;
+        theta = 2;
+        x_term = particles(t+1,i)-particles(t,i); % Is this really correct? Feels weird, but according to the notation it should be like this...
+        prior = (x_term^(k-1)*exp(-x_term/theta))/((theta^k)*gamma(k));
+        % the proposal distribution
+        proposal = (1/sqrt(2*pi*Ps(t+1,i))) * ...
+            exp(-0.5*(1/Ps(t+1,i))*(particles(t+1,i)-estimated_x_means(t+1,i))^2);
+        % the importance weight
+        importance_weights(t,i) = likelihood*prior/proposal;
+    end    
+    % Normalize the importance weights.    
+    importance_weights(t,:) = importance_weights(t,:) ./ ...
+        sum(importance_weights(t,:));
     % ---------------------------------------
+    % b) Selection step, resampling
+
     
     
 end    
