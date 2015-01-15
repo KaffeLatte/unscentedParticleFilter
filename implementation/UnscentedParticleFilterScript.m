@@ -57,9 +57,10 @@ diffs = x_a - estimated_x_a_duplicates; % 3xN
 P0_a = diffs*diffs'; % 3x3
 
 % Define 
-previous_estimated_x = estimated_x;
 previous_estimated_x_a = estimated_x_a;
 previous_P_a = P0_a;
+previous_estimated_x = estimated_x;
+previous_P = P0;
 
 % Step 2. t = 1,...,60
 alpha = 1;
@@ -104,11 +105,18 @@ for t = 1 %t=1:T
         % The updates
         previous_sigma_x = previous_sigma_points(1,:);
         previous_sigma_v = previous_sigma_points(2,:);
+        previous_sigma_n = previous_sigma_points(3,:);
         previous_t = t-1;
-        current_sigma_points(1,:) = processModel(previous_sigma_x, previous_sigma_v, previous_t);
-        current_estimated_x = sum(previous_sigma_weights(1,:) .* current_sigma_points(1,:));
+        % !!!!! WHEN / HOW DO WE PUT IN THE NOISE DISTRIBUTIONS INSTEAD OF
+        % ZEROS !!!! ??????
+        current_sigma_points(1,:) = processModel(previous_sigma_x, previous_sigma_v, previous_t); % 1x7
+        current_estimated_x = sum(previous_sigma_weights(1,:) .* current_sigma_points(1,:)); % 1x1
+        current_P = sum(previous_sigma_weights(2,:) .* ((current_sigma_points(1,:)-current_estimated_x)*(current_sigma_points(1,:)-current_estimated_x)') ); %1x1
+        current_sigma_point_propagations = observationModel(current_sigma_points(1,:),previous_sigma_n, t); % 1x7
+        current_estimated_y = sum(previous_sigma_weights(1,:) .* current_sigma_point_propagations); % 1x1
         
-
+        % ----- Incorporate new observation (measurement update) -----
+        
     % End Loop over all particle filter partcles.
 end    
 
