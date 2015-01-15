@@ -61,6 +61,7 @@ previous_estimated_x_a = estimated_x_a;
 previous_P_a = P0_a;
 previous_estimated_x = estimated_x;
 previous_P = P0;
+previous_particles = particles;
 
 % Step 2. t = 1,...,60
 alpha = 1;
@@ -70,11 +71,12 @@ kappa = 2; % Comment from the paper: kappa = 0 is a good default choise. Change 
 % in each of the t:th steps. Not only using the original values.
 
 for t = 1 %t=1:T
+    % a) Importance sampling step, using SUT.
+    % ---------------------------------------
     % Loop over all particle filter particles.
-        % a) Importance sampling step, using SUT.
-        % ----- Calculate sigma points and their weights -----
-        % Parameter definitions, should maybe be moved outside big loop.
-        n_x = size(x_a,1);
+        % - Update the particles with the UKF:
+        % * Calculate sigma points and their weights
+        n_x = size(x_a,1);          % THESE PARAMETER definitions, should maybe be moved outside big loop?
         lambda = alpha^2 * (n_x + kappa) - n_x; 
         sqrt_matrix = sqrt((n_x+lambda)*previous_P_a); %3x3
         % Initialization
@@ -91,33 +93,51 @@ for t = 1 %t=1:T
         
         W0_m = lambda/(n_x+lambda);
         W0_c = lambda/(n_x+lambda) + (1 - alpha^2 + beta);
-        previous_sigma_weights(1,:) = W0_m; %1x7
-        previous_sigma_weights(2,:) = W0_c; %1x7
-        for sigma_point_i = 2:(2*n_x+1)
-           previous_sigma_weights(sigma_point_i) = 1/(2*(n_x+lambda)); 
-        end
+        previous_sigma_weights(1,1) = W0_m; 
+        previous_sigma_weights(2,1) = W0_c; 
+        previous_sigma_weights(1,2:(2*n_x+1)) = 1/(2*(n_x+lambda));
+        previous_sigma_weights(2,2:(2*n_x+1)) = 1/(2*(n_x+lambda));
         
-        % ----- Propagate particle into future (time update) -----
+        % * Propagate particle into future (time update) 
         % Initialization
         current_sigma_points = zeros(n_x,(2*n_x+1)); %3x7 
-        current_sigma_weights = zeros(1,(2*n_x+1)); %1x7 Or should sigma_weights also be 3x7 ?
+        current_sigma_weights = zeros(2,(2*n_x+1)); %2x7 
 
         % The updates
         previous_sigma_x = previous_sigma_points(1,:);
         previous_sigma_v = previous_sigma_points(2,:);
         previous_sigma_n = previous_sigma_points(3,:);
         previous_t = t-1;
-        % !!!!! WHEN / HOW DO WE PUT IN THE NOISE DISTRIBUTIONS INSTEAD OF
-        % ZEROS !!!! ??????
+                                       % !!!!! WHEN / HOW DO WE PUT IN THE NOISE DISTRIBUTIONS INSTEAD OF ZEROS !!!! ??????
         current_sigma_points(1,:) = processModel(previous_sigma_x, previous_sigma_v, previous_t); % 1x7
         current_estimated_x = sum(previous_sigma_weights(1,:) .* current_sigma_points(1,:)); % 1x1
         current_P = sum(previous_sigma_weights(2,:) .* ((current_sigma_points(1,:)-current_estimated_x)*(current_sigma_points(1,:)-current_estimated_x)') ); %1x1
         current_sigma_point_propagations = observationModel(current_sigma_points(1,:),previous_sigma_n, t); % 1x7
         current_estimated_y = sum(previous_sigma_weights(1,:) .* current_sigma_point_propagations); % 1x1
         
-        % ----- Incorporate new observation (measurement update) -----
+        % * Incorporate new observation (measurement update)
+        current_P_yy = sum(previous_sigma_weights(2,:) .* (current_sigma_point_propagations - current_estimated_y)*(current_sigma_point_propagations - current_estimated_y)' ); %1x1
+        current_P_xy = sum(previous_sigma_weights(2,:) .* (current_sigma_points(1,:) - current_estimated_x)*(current_sigma_point_propagations - current_estimated_y)'); %1x1
+        current_Kalman_gain = current_P_xy * inv(current_P_yy); %1x1
+        current_estimated_x = current_estimated_x + current_Kalman_gain*(yt(t)-current_estimated_y);% 1x1    % CHANGE NAME on this variable?! 
+        current_P = current_P - current_Kalman_gain*current_P_yy*current_Kalman_gain';% 1x1                  % CHANGE NAME on this variable?! 
         
+        % - Sample
+        %normrnd(current_estimated_x, current_P)
+        % - Set        
     % End Loop over all particle filter partcles.
+    
+    % Loop over all particle filter particles.
+        % Evaluate the importance weights up to a normalizing constant.
+    % End Loop over all particle filter partcles.
+    % Loop over all particle filter particles.
+        % Normalize the importance weights.
+    % End Loop over all particle filter partcles.
+    
+    % b) Selection step.
+    % ---------------------------------------
+    
+    
 end    
 
 
