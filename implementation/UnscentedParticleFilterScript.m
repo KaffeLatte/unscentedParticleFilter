@@ -4,7 +4,7 @@ clc
 close all
 t_max = 60;
 x0 = 1; % TODO : change to random value.
-[xt,yt] = generateData(t_max, x0);
+[xt,yt] = generateData(t_max, x0); % dim(xt) = 61x1, dim(yt) = 60x1
 
 
 %% Formulate prior
@@ -34,26 +34,32 @@ T = 60;
 %N = 200;
 N = 10;
 
-% Step 1. t = 0.
+% Step 1. INITIALIZATION, t = 0.
 % Draw particles from the prior
-particles = normrnd(prior_mu, prior_sigma, N, 1); % 200x1
+particles = normrnd(prior_mu, prior_sigma, 1, N); % 1xN
 % Initiate noise variables
-v0 = zeros(N,1);
-n0 = zeros(N,1);
+v0 = zeros(1,N);
+n0 = zeros(1,N);
 % Compute mean
-estimated_x = mean(particles); % scalar
+estimated_x = mean(particles); % 1x1
 % Copute Covariance matrix.
-diffs = particles - estimated_x; % 200x1
-P0 = diffs'*diffs; % 1x1
+diffs = particles - estimated_x; % 1xN
+P0 = diffs*diffs'; % 1x1
 % Redefine the state rand var as a concatenation of the original state and
 % noise variables.
-x_a = [particles, v0, n0]; % 200x3
+x_a = [particles', v0', n0']'; % 3xN
+
 % Compute the "new" mean
-estimated_x_a = [estimated_x, mean(v0), mean(n0)]; % 1x3
+estimated_x_a = [estimated_x, mean(v0), mean(n0)]'; % 3x1
 % Compute the "new" Covariance matrix.
-estimated_x_a_duplicates = repmat(estimated_x_a,N,1); % 200x3
-diffs = x_a - estimated_x_a_duplicates; % 200x3
-P0_a = diffs'*diffs; % 3x3
+estimated_x_a_duplicates = repmat(estimated_x_a,1,N); % 3xN
+diffs = x_a - estimated_x_a_duplicates; % 3xN
+P0_a = diffs*diffs'; % 3x3
+
+% Define 
+previous_estimated_x = estimated_x;
+previous_estimated_x_a = estimated_x_a;
+previous_P_a = P0_a;
 
 % Step 2. t = 1,...,60
 alpha = 1;
@@ -65,46 +71,48 @@ kappa = 2; % Comment from the paper: kappa = 0 is a good default choise. Change 
 for t = 1 %t=1:T
     % Loop over all particle filter particles.
         % a) Importance sampling step, using SUT.
-        % Calculate sigma points and their weights
-        n_x = size(x_a(1,:),2);
+        % ----- Calculate sigma points and their weights -----
+        % Parameter definitions, should maybe be moved outside big loop.
+        n_x = size(x_a,1);
         lambda = alpha^2 * (n_x + kappa) - n_x; 
-        sqrt_matrix = sqrt((n_x+lambda)*P0_a); %3x3
-        sigma_points = zeros((2*n_x+1),n_x);     
-        
-        sigma_points(1,:) = estimated_x_a;
+        sqrt_matrix = sqrt((n_x+lambda)*previous_P_a); %3x3
+        % Initialization
+        previous_sigma_points = zeros(n_x,(2*n_x+1)); %3x7 
+        previous_sigma_weights = zeros(2,(2*n_x+1)); %2x7 
+        % The calculations
+        previous_sigma_points(:,1) = previous_estimated_x_a;
         for sigma_point_i = 2:(n_x+1)
-            sigma_points(sigma_point_i,:) = estimated_x_a + sqrt_matrix(sigma_point_i-1,:);
+            previous_sigma_points(:,sigma_point_i) = previous_estimated_x_a + sqrt_matrix(:,sigma_point_i-1);
         end
         for sigma_point_i = (n_x+2):(2*n_x+1)
-            sigma_points(sigma_point_i,:) = estimated_x_a - sqrt_matrix(sigma_point_i-4,:);
+            previous_sigma_points(:,sigma_point_i) = previous_estimated_x_a - sqrt_matrix(:,sigma_point_i-4);
         end
+        
         W0_m = lambda/(n_x+lambda);
         W0_c = lambda/(n_x+lambda) + (1 - alpha^2 + beta);
+        previous_sigma_weights(1,:) = W0_m; %1x7
+        previous_sigma_weights(2,:) = W0_c; %1x7
+        for sigma_point_i = 2:(2*n_x+1)
+           previous_sigma_weights(sigma_point_i) = 1/(2*(n_x+lambda)); 
+        end
         
+        % ----- Propagate particle into future (time update) -----
+        % Initialization
+        current_sigma_points = zeros(n_x,(2*n_x+1)); %3x7 
+        current_sigma_weights = zeros(1,(2*n_x+1)); %1x7 Or should sigma_weights also be 3x7 ?
+
+        % The updates
+        previous_sigma_x = previous_sigma_points(1,:);
+        previous_sigma_v = previous_sigma_points(2,:);
+        previous_t = t-1;
+        current_sigma_points(1,:) = processModel(previous_sigma_x, previous_sigma_v, previous_t);
+        current_estimated_x = sum(previous_sigma_weights(1,:) .* current_sigma_points(1,:));
         
-        
+
     % End Loop over all particle filter partcles.
 end    
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%x_a = [particles, v0, n0];
-% estimated_x_a = [estimated_x', 0, 0]';
 
 
 
