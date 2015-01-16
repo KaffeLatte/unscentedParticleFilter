@@ -17,7 +17,7 @@ n_part = size(current_x,2);
 if current_t <= 30
     current_y = phi2*(current_x.^2) + previous_n;
 else
-    current_y = phi3*xt - 2*ones(1,n_part) + previous_n;
+    current_y = phi3*current_x - 2*ones(1,n_part) + previous_n;
 end
 
 
