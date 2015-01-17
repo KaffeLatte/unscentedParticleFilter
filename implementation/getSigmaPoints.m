@@ -1,6 +1,6 @@
-function [ output_args ] = getSigmaPoints( input_args )
-%UNTITLED8 Summary of this function goes here
-%   Detailed explanation goes here
+function [sigma_points, sigma_weights, number_of_points] = getSigmaPoints(x_mean, P, alpha, beta, kappa)
+% the Scaled Unscented transformation
+n_x = 
 
 
 end

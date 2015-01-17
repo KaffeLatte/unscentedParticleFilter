@@ -1,0 +1,7 @@
+function [sigma_points, sigma_weights, number_of_points] = getSigmaPoints(x_mean_a, P_a, alpha, beta, kappa)
+% the Scaled Unscented transformation
+n_x_mean_a = size(x_mean_a,1);
+
+
+end
+
