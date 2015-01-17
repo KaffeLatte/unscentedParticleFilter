@@ -1,4 +1,4 @@
-function [x_mean_est, P_est] = UKF(x_prev, P_prev, U, Q, y_true, R, t, alpha, beta, kappa  )
+function [x_mean_est, P_est] = UKFilter(x_prev, P_prev, U, Q, y_true, R, t, alpha, beta, kappa  )
 % Input:
 % Output:
 % x_mean_predict
