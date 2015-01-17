@@ -16,10 +16,10 @@ kappa           = 2;
 gamma1 = 3;
 gamma2 = 2;
 
-number_of_runs  = 2; %100
-MSE = zeros(1,number_of_runs);
+iterations  = 2; %100
+MSE = zeros(1,iterations);
 
-for run=1:number_of_runs
+for run=1:iterations
     
     % Generate data
     x0 = 1; % = abs(randn(1,1))*100;
@@ -37,8 +37,10 @@ for run=1:number_of_runs
     for t = 2:T
         % Prediction step
         for i=1:N
+            %[x_mean_predict(t,i), P_predict(t,i)] = ...
+             %   UKF(x(t-1,i), P(t-1,i), [], Q, yt(t), R, t, alpha, beta, kappa);
             [x_mean_predict(t,i), P_predict(t,i)] = ...
-                UKF(x(t-1,i), P(t-1,i), [], Q, yt(t), R, t, alpha, beta, kappa);
+            ukf(x(t-1,i),P(t-1,i),[],Q,'ukf_ffun',yt(t),R,'ukf_hfun',t,alpha,beta,kappa);
             %[x_mean(t,i), P_predict(t,i)] = ...
             %    ukf(x(t-1,i), P(t-1,i), [], Q, 'ukf_ffun', yt(t), R, 'ukf_hfun', t, alpha, beta, kappa);
             
@@ -46,7 +48,7 @@ for run=1:number_of_runs
             %------------------------------
             % TODO: Try to generate x_predict with P_predict directly, without
             % the use of sqrtm().
-            x_predict(t,i) = normrnd(x_mean_predict(t,i), sqrtm(P_predict(t,i)), 1, 1)
+            x_predict(t,i) = normrnd(x_mean_predict(t,i), sqrtm(P_predict(t,i)), 1, 1);
             %x_predict(t, i) = x_mean(t, i) + sqrtm(P_predict(t, i)) * randn(1, 1);
             
         end
@@ -54,16 +56,16 @@ for run=1:number_of_runs
         % Evaluate importance weights up to a normalizing constant
         for i=1:N,
             % TODO fix this term
-            y_predict(t, i) = predictY(x_predict(x, i), t);
+            y_predict(t, i) = predictY(x_predict(t, i), t);
             
             % Calculate likelihood
-            likelihood_exponent = -0.5 * inv(sigma) * ((yt(t) - y_predict(t, i))^2) 
+            likelihood_exponent = -0.5 * inv(sigma) * ((yt(t) - y_predict(t, i))^2);
             likelihood = 1e-50 + inv(sqrt(sigma)) * exp(likelihood_exponent);
             
             % Calculate prior
             prior_exponent = -gamma2*(x_predict(t, i)) - x(t-1, i);
-            prior_term = x_predict(t, i) - x(t-1, i)^(gamma1)
-            prior = prior_term * exp(prior_exponent)
+            prior_term = x_predict(t, i) - x(t-1, i)^(gamma1);
+            prior = prior_term * exp(prior_exponent);
             
             % Calculate proposal
             proposal_term = inv(sqrt(P_predict(t, i)));
@@ -84,12 +86,13 @@ for run=1:number_of_runs
         % differs from the resampling in the original paper, but is said to
         % not matter that much. Our resampling procedure has higher
         % variance.
-        resampledPoints = randsample(N,N,true,w(t,:));
+        resampledPoints = randsample(N,N,true,weights(t,:));
         x(t, :) = x(t, resampledPoints);
         P(t, :) = P(t, resampledPoints);
         
         
     end
+    
 end    
 % Plot generated data
 % Plot estimated states

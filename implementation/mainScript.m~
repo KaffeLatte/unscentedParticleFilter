@@ -38,7 +38,8 @@ for run=1:number_of_runs
         % Prediction step
         for i=1:N
             [x_mean_predict(t,i), P_predict(t,i)] = ...
-                UKF(x(t-1,i), P(t-1,i), [], Q, yt(t), R, t, alpha, beta, kappa);
+                %UKF(x(t-1,i), P(t-1,i), [], Q, yt(t), R, t, alpha, beta, kappa);
+            kf(xparticle_pfukf(t-1,i),Pparticle_pfukf(t-1,i),[],Q_pfukf,'ukf_ffun',y(t),R_pfukf,'ukf_hfun',t,alpha,beta,kappa);
             %[x_mean(t,i), P_predict(t,i)] = ...
             %    ukf(x(t-1,i), P(t-1,i), [], Q, 'ukf_ffun', yt(t), R, 'ukf_hfun', t, alpha, beta, kappa);
             
