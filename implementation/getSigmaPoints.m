@@ -20,10 +20,9 @@ sigma_points = zeros(n_x_mean_a, number_of_points); %3x7
 sigma_weights = zeros(1, number_of_points); %1x7
 
 % Calculate matrix square root 
-sqrt_matrix = (chol((n_x_mean_a+lamda)*P_previous_a))'; %%%%
-size(sqrt_matrix)
+sqrt_matrix = (chol((n_x_mean_a+lambda)*P_previous_a))'; % 3x3
 % Define the sigma_points columns
-sigma_points = [zeros(size(P_previous_a),1), -sqrt_matrix, sqrt_matrix]; %%%%% 
+sigma_points = [zeros(size(P_previous_a,1),1), -sqrt_matrix, sqrt_matrix]; %%%%% 
 % Add mean to the rows
 sigma_points = sigma_points + repmat(x_mean_previous_a, 1, number_of_points);
 
