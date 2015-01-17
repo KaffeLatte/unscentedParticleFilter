@@ -87,15 +87,27 @@ for run=1:iterations
         % not matter that much. Our resampling procedure has higher
         % variance.
         resampledPoints = randsample(N,N,true,weights(t,:));
-        x(t, :) = x(t, resampledPoints);
+        x(t, :) = x_predict(t, resampledPoints);
         P(t, :) = P(t, resampledPoints);
-        
-        
+              
     end
     
 end    
 % Plot generated data
 % Plot estimated states
 
+%%%%%%%%%%%%%%%%%%%%%  PLOT THE RESULTS  %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%  ================  %%%%%%%%%%%%%%%%%%%%%
+
+figure(1)
+clf;
+p0=plot(1:T,yt,'k+','lineWidth',2); hold on;
+
+p6=plot(1:T,mean(x(:, :)'),'b','lineWidth',2); 
+p1=plot(1:T,xt(1:60,:),'k:o','lineWidth',2); hold off;
+legend([p0 p1 p6],'Noisy observations','True x', 'PF-UKF estimate');
+xlabel('Time','fontsize',15)
+zoom on;
+title('Filter estimates (posterior means) vs. True state','fontsize',15)
 
 
