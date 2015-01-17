@@ -13,6 +13,9 @@ alpha           = 1;
 beta            = 0;
 kappa           = 2;
 
+gamma1 = 3;
+gamma2 = 2;
+
 number_of_runs  = 2; %100
 MSE = zeros(1,number_of_runs);
 
@@ -50,13 +53,37 @@ for run=1:number_of_runs
         
         % Evaluate importance weights up to a normalizing constant
         for i=1:N,
+            % TODO fix this term
+            y_predict(t, i) = predictY(x_predict(x, i), t);
             
+            % Calculate likelihood
+            likelihood_exponent = -0.5 * inv(sigma) * ((yt(t) - y_predict(t, i))^2) 
+            likelihood = 1e-50 + inv(sqrt(sigma)) * exp(likelihood_exponent);
+            
+            % Calculate prior
+            prior_exponent = -gamma2*(x_predict(t, i)) - x(t-1, i);
+            prior_term = x_predict(t, i) - x(t-1, i)^(gamma1)
+            prior = prior_term * exp(prior_exponent)
+            
+            % Calculate proposal
+            proposal_term = inv(sqrt(P_predict(t, i)));
+            proposal_exponent = -0.5 * inv(P_predict(t, i)) * ( x_predict(t, i)-x_mean_predict(t, i) )^2;
+            proposal = proposal_term * exp(proposal_exponent);
+            
+            % Assign a value to the weight
+            weights(t, :) = likelihood * prior / proposal;
             
             
         end
-        
+        % Normalize weights
+        weightSum = sum(weights(t, :));
+        weights(t, :) = weights(t, :) ./ weightSum;
         
         % Selection step
+        % We resample points according to multinomial resampling (a SIR variant), this
+        % differs from the resampling in the original paper, but is said to
+        % not matter that much. Our resampling procedure has higher
+        % variance.
         resampledPoints = randsample(N,N,true,w(t,:));
         x(t, :) = x(t, resampledPoints);
         P(t, :) = P(t, resampledPoints);
