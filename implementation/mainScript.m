@@ -35,7 +35,9 @@ for run=1:number_of_runs
     % Prediction step
     for i=1:N
         [x_mean(t,i), P_predict(t,i)] = ...
-            ukf(x(t-1,i), P(t-1,i), [], Q, yt(t), R, t, alpha, beta, kappa);
+            ukf(x(t-1,i), P(t-1,i), [], Q, 'ukf_ffun', yt(t), R, 'ukf_hfun', t, alpha, beta, kappa);
+        %[x_mean(t,i), P_predict(t,i)] = ...
+        %    UKF(x(t-1,i), P(t-1,i), [], Q, yt(t), R, t, alpha, beta, kappa);
         x_predict(t, i) = x_mean(t, i) + sqrtm(P_predict(t, i)) * randn(1, 1);
         %x_predict(t,i) = normrnd(x_mean(t,i), sqrtm(P_predict(t,i)), 1, 1)
     end
