@@ -1,7 +1,7 @@
-function [x_mean_predict, P_predict] = UKF(x_prev, P_prev )
+function [x_mean_pred, P_predict] = UKF(x_prev, P_prev )
 % Input:
 % Output:
-% x_mean_predict
+
 
 
 %[x_mean(t,i), P_predict(t,i)] = ...
