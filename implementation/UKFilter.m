@@ -55,14 +55,14 @@ x_diff = x_sigma_points(:,2:number_of_sigma_points) - ...
 y_diff = y_sigma_points(:,2:number_of_sigma_points) - ...
     repmat(y_mean_pred,1,number_of_sigma_points-1);
 P_pred = P_pred + (W_x .* x_diff) * x_diff';
-P_yy = P_yy + (W_x .* y_diff) * y_diff';
-P_xy = P_xy + x_diff * (W_x .* y_diff)';
+P_yy = P_yy + (W_y .* y_diff) * y_diff';
+P_xy = P_xy + x_diff * (W_y .* y_diff)';
  
-K = P_xy / P_yy
+K = P_xy / P_yy;
 
-x_est = x_mean_pred + K* y_true - y_mean_pred
+x_est = x_mean_pred + K*( y_true - y_mean_pred);
 
-P_est = P_pred - K*P_yy*K'
+P_est = P_pred - K*P_yy*K';
 
 end
 
