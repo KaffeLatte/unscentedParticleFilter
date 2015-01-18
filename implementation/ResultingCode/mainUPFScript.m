@@ -16,7 +16,7 @@ kappa           = 2;
 gamma1 = 3;
 gamma2 = 2;
 
-iterations  = 2; %100
+iterations  = 100;
 MSE = zeros(1,iterations);
 
 for run=1:iterations
@@ -24,7 +24,6 @@ for run=1:iterations
     % Generate data
     x0 = 1; % = abs(randn(1,1))*100;
     [xt,yt] = generateData(T, x0); % dim(xt) = 61x1, dim(yt) = 60x1
-
     % Initialization
     x = ones(T, N);
     P = P_init * ones(T, N);
@@ -88,10 +87,13 @@ for run=1:iterations
         P(t, :) = P(t, resampledPoints);
               
     end
-    
+estimated_x_mean = mean(x,2);
+xt = xt(1:60);
+MSE(iterations) = (1/T)*sum((xt-estimated_x_mean).^2);  
 end    
-% Plot generated data
-% Plot estimated states
+
+MSE_mean = mean(MSE)
+MSE_var = var(MSE)
 
 %%%%%%%%%%%%%%%%%%%%%  PLOT THE RESULTS  %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%  ================  %%%%%%%%%%%%%%%%%%%%%
