@@ -92,8 +92,8 @@ xt = xt(1:60);
 MSE(run) = (1/T)*sum((xt-estimated_x_mean).^2);  
 end    
 %%
-MSE_mean = mean(MSE)
-MSE_var = var(MSE)
+MSE_mean = mean(MSE);
+MSE_var = var(MSE);
  
 %% Plotting
 figure()

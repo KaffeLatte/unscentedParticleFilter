@@ -19,3 +19,14 @@ MSE_mean =
 MSE_var =
 
     5.3146
+
+Results beloning to the Correct Plot:
+
+MSE_mean =
+
+   20.9891
+
+
+MSE_var =
+
+   2.0593e+03
