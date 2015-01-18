@@ -16,7 +16,7 @@ kappa           = 2;
 gamma1 = 3;
 gamma2 = 2;
 
-iterations  = 5;
+iterations  = 10;
 MSE = zeros(1,iterations);
 
 for run=1:iterations
@@ -69,7 +69,7 @@ for run=1:iterations
             proposal = proposal_term * exp(proposal_exponent);
             
             % Assign a value to the weight
-            weights(t, i) = likelihood * prior / proposal;
+            weights(t, :) = likelihood * prior / proposal;
             
             
         end
@@ -85,6 +85,8 @@ for run=1:iterations
         resampledPoints = randsample(N,N,true,weights(t,:));
         x(t, :) = x_predict(t, resampledPoints);
         P(t, :) = P(t, resampledPoints);
+        
+        erikEst(run, t) = x .* weights)
         
     end
 estimated_x_mean = mean(x,2);
