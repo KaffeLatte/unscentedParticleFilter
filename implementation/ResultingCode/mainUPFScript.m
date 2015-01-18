@@ -37,14 +37,10 @@ for run=1:iterations
     for t = 2:T
         % Prediction step
         for i=1:N
+            % Preform the UKF
             [x_mean_predict(t,i), P_predict(t,i)] = ...
                UKFilter(x(t-1,i), P(t-1,i), Q, yt(t), R, t, alpha, beta, kappa);
-            
-               
-               %[x_mean_predict(t,i), P_predict(t,i)] = ...
-            %ukf(x(t-1,i),P(t-1,i),[],Q,'ukf_ffun',yt(t),R,'ukf_hfun',t,alpha,beta,kappa);
 
-            
             % Sample x-hat
             %------------------------------
             % TODO: Try to generate x_predict with P_predict directly, without
