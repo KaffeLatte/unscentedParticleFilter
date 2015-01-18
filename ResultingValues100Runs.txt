@@ -1,3 +1,5 @@
+Results belonging to Plot 1:
+
 MSE_mean =
 
     0.0655
@@ -6,3 +8,14 @@ MSE_mean =
 MSE_var =
 
     0.4293
+
+Results belonging to Plot 2:
+
+MSE_mean =
+
+    0.2305
+
+
+MSE_var =
+
+    5.3146
